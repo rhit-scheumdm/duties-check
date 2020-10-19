@@ -8,7 +8,7 @@ rhit.logInCheck = class {
 			console.log('email :>> ', email);
 			console.log('password :>> ', password);
 			firebase.auth().signInWithEmailAndPassword(email, password).then(function() {
-				window.location.href = "/duties.html";
+				window.location.href = "/startPage.html";
 			})
 			.catch(function(error) {
 				var errorCode = error.code;
@@ -20,9 +20,8 @@ rhit.logInCheck = class {
 
 }
 
-rhit.DutiesPage = class {
+rhit.StartPage = class {
 	constructor() {
-		console.log('document.querySelector("#signOutButton") :>> ', document.querySelector("#signOutButton"));
 		document.querySelector("#signOutButton").addEventListener("click", (event) => {
 			window.location.href = "/";
 		});
@@ -34,8 +33,8 @@ rhit.main = function () {
 	if(document.querySelector("#mainPage")) {
 		new rhit.logInCheck();
 	}
-	if(document.querySelector("#dutiesPage")) {
-		new rhit.DutiesPage();
+	if(document.querySelector("#startPage")) {
+		new rhit.StartPage();
 	}
 };
 
