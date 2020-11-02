@@ -71,10 +71,17 @@ rhit.checkForRedirects = function () {
 	}
 }
 
-rhit.StartPage = class {
+rhit.StartPageController = class {
 	constructor() {
 		document.querySelector("#signOutButton").addEventListener("click", (event) => {
 			rhit.fbAuthManager.signOut();
+		});
+		document.querySelector("#dutiesPerformersButton").addEventListener("click", (event) => {
+			window.location.href = "/performers.html";
+		});
+		document.querySelector("#houseManagerButton").addEventListener("click", (event) => {
+			//TODO: add passcode popup prompt (modal?) for managers to be able to access, add delete etc only for manager
+			window.location.href = "/manager.html";
 		});
 	}
 }
@@ -85,7 +92,7 @@ rhit.initializePage = function () {
 		new rhit.LoginPageController();
 	}
 	if (document.querySelector("#startPage")) {
-		new rhit.StartPage();
+		new rhit.StartPageController();
 	}
 }
 

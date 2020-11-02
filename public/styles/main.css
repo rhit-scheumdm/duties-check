@@ -9,12 +9,12 @@ body {
 
 .page-container {
     margin-top: 75px;
-    background-color: #FFFFFF;
+    background-color: #007FFF;
     color: #CFB53B;
 }
 
 #atoLogo {
-    max-width: 200px;
+    max-width: 150px;
 }
 
 #roseLogo {
@@ -31,4 +31,17 @@ body {
     font-size: 1.1em;
     padding: 10px 30px;
     border-radius: 5px;
+}
+
+#startPage > .btn,
+#performersPage > .btn,
+#managerPage > .btn {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 30px;
+    background: white;
+}
+
+#selectText {
+    text-align: center;
 }
