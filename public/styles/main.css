@@ -35,7 +35,8 @@ body {
 
 #startPage > .btn,
 #performersPage > .btn,
-#managerPage > .btn {
+#managerPage > .btn,
+#hallwaysPage > .btn {
     display: block;
     margin: 20px auto;
     padding: 10px 30px;
@@ -44,4 +45,8 @@ body {
 
 #selectText {
     text-align: center;
+}
+
+.card {
+    margin: 10px 0;
 }
