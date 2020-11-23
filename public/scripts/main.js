@@ -9,6 +9,15 @@
 /** namespace. */
 var rhit = rhit || {};
 
+rhit.FB_COLLECTION_HALLWAYS = "Hallways";
+rhit.FB_COLLECTION_JUDY = "Judy";
+rhit.FB_COLLECTION_DISH_CREW = "Dish Crew";
+rhit.FB_COLLECTION_LIBRARY = "Library";
+rhit.FB_KEY_TITLE = "title";
+rhit.FB_KEY_DESCRIPTION = "description";
+rhit.fbDutiesManager = null;
+rhit.fbSingleDutyManager = null;
+
 rhit.fbAuthManager = null;
 rhit.isHouseManager = false;
 
@@ -25,6 +34,130 @@ rhit.LoginPageController = class {
 		document.querySelector("#rosefireButton").onclick = (event) => {
 			rhit.fbAuthManager.signIn();
 		};
+	}
+}
+
+rhit.Duty = class {
+	constructor(id, title, description) {
+		this.id = id;
+		this.title = title;
+		this.description = description;
+	}
+}
+
+rhit.FbDutiesManager = class {
+	constructor(location) {
+		this._documentSnapshots = [];
+		if (location == "hallways") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_HALLWAYS);
+		} else if (location == "judy") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_JUDY);
+		} else if (location == "library") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_LIBRARY);
+		} else if (location == "dishCrew") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_DISH_CREW);
+		}
+		this._unsubscribe = null;
+	}
+	add(title, description) {
+		// Add a new document with a generated id.
+		this._ref.add({
+				[rhit.FB_KEY_TITLE]: title,
+				[rhit.FB_KEY_DESCRIPTION]: description,
+			})
+			.then(function (docRef) {
+				console.log("Document written with ID: ", docRef.id);
+			})
+			.catch(function (error) {
+				console.error("Error adding document: ", error);
+			});
+	}
+	beginListening(changeListener) {
+		let query = this._ref.orderBy(rhit.FB_KEY_TITLE, "desc").limit(50);
+		this._unsubscribe = query.onSnapshot((querySnapshot) => {
+			console.log("Duty update");
+			this._documentSnapshots = querySnapshot.docs;
+			// querySnapshot.forEach((doc) => {
+			// 	console.log(doc.data());
+			// });
+			changeListener();
+		});
+	}
+	stopListening() {
+		this._unsubscribe();
+	}
+	// update(id, quote, movie) {}
+	// delete(id) {}
+	get length() {
+		return this._documentSnapshots.length;
+	}
+	getDutyAtIndex(index) {
+		const docSnapshot = this._documentSnapshots[index];
+		const d = new rhit.Duty(
+			docSnapshot.id,
+			docSnapshot.get(rhit.FB_KEY_TITLE),
+			docSnapshot.get(rhit.FB_KEY_DESCRIPTION),
+		);
+		return d;
+	}
+}
+
+rhit.FbSingleDutyManager = class {
+
+	constructor(dutyId, location) {
+		this._documentSnapshot = {};
+		this._unsubscribe = null;
+		if (location == "hallways") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_HALLWAYS).doc(dutyId);
+		} else if (location == "judy") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_JUDY).doc(dutyId);
+		} else if (location == "library") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_LIBRARY).doc(dutyId);
+		} else if (location == "dishCrew") {
+			this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_DISH_CREW).doc(dutyId);
+		}
+	}
+
+	beginListening(changeListener) {
+		this._unsubscribe = this._ref.onSnapshot((doc) => {
+			if (doc.exists) {
+				console.log("Document data:", doc.data());
+				this._documentSnapshot = doc;
+				changeListener();
+			} else {
+				// doc.data() will be undefined in this case
+				console.log("No such document!");
+			}
+		});
+	}
+
+	stopListening() {
+		this._unsubscribe();
+	}
+
+	update(title, description) {
+		this._ref.update({
+				[rhit.FB_KEY_TITLE]: title,
+				[rhit.FB_KEY_DESCRIPTION]: description,
+			})
+			.then(() => {
+				console.log("Document successfully updated!");
+			})
+			.catch(function (error) {
+				console.error("Error updating document: ", error);
+			});
+	}
+
+	delete() {
+		return this._ref.delete();
+	}
+
+	get title() {
+		return this._documentSnapshot.get(rhit.FB_KEY_TITLE);
+	}
+
+	get description() {
+		return this._documentSnapshot.get(rhit.FB_KEY_DESCRIPTION);
 	}
 }
 
@@ -90,10 +223,26 @@ rhit.StartPageController = class {
 			window.location.href = "/performers.html";
 		});
 		document.querySelector("#houseManagerButton").addEventListener("click", (event) => {
-			//TODO: add passcode popup prompt (modal?) for managers to be able to access, add delete etc only for manager
-			//NOTE: don't hardcode passcode (encryption? use uid and house manager var?)
-			rhit.isHouseManager = true;
-			window.location.href = "/manager.html";
+			document.querySelector("#submitInputPass").addEventListener("click", (event) => {
+				const inputPass = document.querySelector("#inputPass").value;
+				if (inputPass == "1865") {
+					rhit.isHouseManager = true;
+				}
+				if (rhit.isHouseManager == true) {
+					window.location.href = "/manager.html";
+				} else {
+					window.location.href = "/start.html";
+				}
+			});
+		});
+
+		$("#enterPass").on("show.bs.modal", (event) => {
+			//Pre animation
+			document.querySelector("#inputPass").value = "";
+		});
+		$("#enterPass").on("shown.bs.modal", (event) => {
+			//Post animation
+			document.querySelector("#inputPass").focus();
 		});
 	}
 }
@@ -103,21 +252,57 @@ rhit.PerformersPageController = class {
 		document.querySelector("#signOutButton").addEventListener("click", (event) => {
 			rhit.fbAuthManager.signOut();
 		});
+		document.querySelector("#dishCrewButton").addEventListener("click", (event) => {
+			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
+			window.location.href = `/dishCrew.html?isHouseManager=false`;
+		});
+		document.querySelector("#judyButton").addEventListener("click", (event) => {
+			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
+			window.location.href = `/judy.html?isHouseManager=false`;
+		});
+		document.querySelector("#libraryButton").addEventListener("click", (event) => {
+			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
+			window.location.href = `/library.html?isHouseManager=false`;
+		});
 		document.querySelector("#lowerNorthButton").addEventListener("click", (event) => {
 			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
-			window.location.href = `/hallways.html?area=lowerNorth&isHouseManager=${rhit.isHouseManager}`;
+			window.location.href = `/hallways.html?area=lowerNorth&isHouseManager=false`;
 		});
 		document.querySelector("#lowerSouthButton").addEventListener("click", (event) => {
 			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
-			window.location.href = `/hallways.html?area=lowerSouth&isHouseManager=${rhit.isHouseManager}`;
+			window.location.href = `/hallways.html?area=lowerSouth&isHouseManager=false`;
 		});
 		document.querySelector("#upperNorthButton").addEventListener("click", (event) => {
 			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
-			window.location.href = `/hallways.html?area=upperNorth&isHouseManager=${rhit.isHouseManager}`;
+			window.location.href = `/hallways.html?area=upperNorth&isHouseManager=false`;
 		});
 		document.querySelector("#upperSouthButton").addEventListener("click", (event) => {
 			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
-			window.location.href = `/hallways.html?area=upperSouth&isHouseManager=${rhit.isHouseManager}`;
+			window.location.href = `/hallways.html?area=upperSouth&isHouseManager=false`;
+		});
+	}
+}
+
+rhit.ManagerPageController = class {
+	constructor() {
+		document.querySelector("#signOutButton").addEventListener("click", (event) => {
+			rhit.fbAuthManager.signOut();
+		});
+		document.querySelector("#dishCrewButton").addEventListener("click", (event) => {
+			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
+			window.location.href = `/dishCrewManage.html?isHouseManager=true`;
+		});
+		document.querySelector("#judyButton").addEventListener("click", (event) => {
+			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
+			window.location.href = `/judyManage.html?isHouseManager=true`;
+		});
+		document.querySelector("#libraryButton").addEventListener("click", (event) => {
+			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
+			window.location.href = `/libraryManage.html?isHouseManager=true`;
+		});
+		document.querySelector("#hallwaysButton").addEventListener("click", (event) => {
+			//TODO: have button to say "im finished", use area to send notif to manager for that area being completed
+			window.location.href = `/hallwaysManage.html?isHouseManager=true`;
 		});
 	}
 }
@@ -127,41 +312,263 @@ rhit.HallwaysPageController = class {
 		document.querySelector("#signOutButton").addEventListener("click", (event) => {
 			rhit.fbAuthManager.signOut();
 		});
+
+		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+			const title = document.querySelector("#inputTitle").value;
+			const description = document.querySelector("#inputDescription").value;
+			rhit.fbHallwayDutiesManager.add(title, description);
+		});
+
+		$("#addDutyDialog").on("show.bs.modal", (event) => {
+			//Pre animation
+			document.querySelector("#inputTitle").value = "";
+			document.querySelector("#inputDescription").value = "";
+		});
+		$("#addDutyDialog").on("shown.bs.modal", (event) => {
+			//Post animation
+			document.querySelector("#inputTitle").focus();
+		});
+
+		rhit.fbHallwayDutiesManager.beginListening(this.updateList.bind(this));
 	}
-	//TODO: implement update list and create card
-	// updateList() {
-	// 	const newList = htmlToElement('<div id="dutiesListContainer"></div>');
+	updateList() {
+		const newList = htmlToElement('<div id="hallwaysDutiesListContainer"></div>');
 
-	// 	for (let i = 0; i < rhit.fbDutiesManager.length; i++) {
-	// 		const mq = rhit.fbDutiesManager.getMovieQuoteAtIndex(i);
-	// 		const newCard = this._createCard(mq);
-	// 		newCard.onclick = (event) => {
-	// 			//console.log(`You clicked on ${mq.id}`);
-	// 			// rhit.storage.setMovieQuoteId(mq.id);
-	// 			window.location.href = `/moviequote.html?id=${mq.id}`;
-	// 		}
-	// 		newList.appendChild(newCard);
-	// 	}
+		for (let i = 0; i < rhit.fbHallwayDutiesManager.length; i++) {
+			const d = rhit.fbHallwayDutiesManager.getDutyAtIndex(i);
+			const newCard = this._createCard(d);
+			newCard.onclick = (event) => {
+				console.log(rhit.isHouseManager);
+				if (rhit.isHouseManager == true) {
+					window.location.href = `/duty.html?id=${d.id}&duties=hallways`;
+				}
+			}
+			newList.appendChild(newCard);
+		}
 
-	// 	const oldList = document.querySelector("#quoteListContainer");
-	// 	oldList.removeAttribute("id");
-	// 	oldList.hidden = true;
+		const oldList = document.querySelector("#hallwaysDutiesListContainer");
+		oldList.removeAttribute("id");
+		oldList.hidden = true;
 
-	// 	oldList.parentElement.appendChild(newList);
-	// }
+		oldList.parentElement.appendChild(newList);
+	}
 
-	// _createCard(movieQuote) {
-	// 	return htmlToElement(`<div class="card">
-    //     <div class="card-body">
-    //       <h5 class="card-title">${movieQuote.quote}</h5>
-    //       <h6 class="card-subtitle mb-2 text-muted">${movieQuote.movie}</h6>
-    //     </div>
-    //   </div>`)
-	// }
+	_createCard(duty) {
+		return htmlToElement(`<div class="card">
+	    <div class="card-body">
+	      <h5 class="card-title">${duty.title}</h5>
+	      <h6 class="card-subtitle mb-2 text-muted">${duty.description}</h6>
+	    </div>
+	  </div>`)
+	}
+}
+
+rhit.DishCrewPageController = class {
+	constructor() {
+		document.querySelector("#signOutButton").addEventListener("click", (event) => {
+			rhit.fbAuthManager.signOut();
+		});
+
+		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+			const title = document.querySelector("#inputTitle").value;
+			const description = document.querySelector("#inputDescription").value;
+			rhit.fbDishCrewDutiesManager.add(title, description);
+		});
+
+		$("#addDutyDialog").on("show.bs.modal", (event) => {
+			//Pre animation
+			document.querySelector("#inputTitle").value = "";
+			document.querySelector("#inputDescription").value = "";
+		});
+		$("#addDutyDialog").on("shown.bs.modal", (event) => {
+			//Post animation
+			document.querySelector("#inputTitle").focus();
+		});
+
+		rhit.fbDishCrewDutiesManager.beginListening(this.updateList.bind(this));
+	}
+	updateList() {
+		const newList = htmlToElement('<div id="dishCrewDutiesListContainer"></div>');
+
+		for (let i = 0; i < rhit.fbDishCrewDutiesManager.length; i++) {
+			const d = rhit.fbDishCrewDutiesManager.getDutyAtIndex(i);
+			const newCard = this._createCard(d);
+			newCard.onclick = (event) => {
+				if (rhit.isHouseManager == true) {
+					window.location.href = `/duty.html?id=${d.id}&duties=dishCrew`;
+				}
+			}
+			newList.appendChild(newCard);
+		}
+
+		const oldList = document.querySelector("#dishCrewDutiesListContainer");
+		oldList.removeAttribute("id");
+		oldList.hidden = true;
+
+		oldList.parentElement.appendChild(newList);
+	}
+
+	_createCard(duty) {
+		return htmlToElement(`<div class="card">
+	    <div class="card-body">
+	      <h5 class="card-title">${duty.title}</h5>
+	      <h6 class="card-subtitle mb-2 text-muted">${duty.description}</h6>
+	    </div>
+	  </div>`)
+	}
+}
+
+rhit.LibraryPageController = class {
+	constructor() {
+		document.querySelector("#signOutButton").addEventListener("click", (event) => {
+			rhit.fbAuthManager.signOut();
+		});
+
+		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+			const title = document.querySelector("#inputTitle").value;
+			const description = document.querySelector("#inputDescription").value;
+			rhit.fbLibraryDutiesManager.add(title, description);
+		});
+
+		$("#addDutyDialog").on("show.bs.modal", (event) => {
+			//Pre animation
+			document.querySelector("#inputTitle").value = "";
+			document.querySelector("#inputDescription").value = "";
+		});
+		$("#addDutyDialog").on("shown.bs.modal", (event) => {
+			//Post animation
+			document.querySelector("#inputTitle").focus();
+		});
+
+		rhit.fbLibraryDutiesManager.beginListening(this.updateList.bind(this));
+	}
+	updateList() {
+		const newList = htmlToElement('<div id="libraryDutiesListContainer"></div>');
+
+		for (let i = 0; i < rhit.fbLibraryDutiesManager.length; i++) {
+			const d = rhit.fbLibraryDutiesManager.getDutyAtIndex(i);
+			const newCard = this._createCard(d);
+			newCard.onclick = (event) => {
+				if (rhit.isHouseManager == true) {
+					window.location.href = `/duty.html?id=${d.id}&duties=library`;
+				}
+			}
+			newList.appendChild(newCard);
+		}
+
+		const oldList = document.querySelector("#libraryDutiesListContainer");
+		oldList.removeAttribute("id");
+		oldList.hidden = true;
+
+		oldList.parentElement.appendChild(newList);
+	}
+
+	_createCard(duty) {
+		return htmlToElement(`<div class="card">
+	    <div class="card-body">
+	      <h5 class="card-title">${duty.title}</h5>
+	      <h6 class="card-subtitle mb-2 text-muted">${duty.description}</h6>
+	    </div>
+	  </div>`)
+	}
+}
+
+rhit.JudyPageController = class {
+	constructor() {
+		document.querySelector("#signOutButton").addEventListener("click", (event) => {
+			rhit.fbAuthManager.signOut();
+		});
+
+		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+			const title = document.querySelector("#inputTitle").value;
+			const description = document.querySelector("#inputDescription").value;
+			rhit.fbJudyDutiesManager.add(title, description);
+		});
+
+		$("#addDutyDialog").on("show.bs.modal", (event) => {
+			//Pre animation
+			document.querySelector("#inputTitle").value = "";
+			document.querySelector("#inputDescription").value = "";
+		});
+		$("#addDutyDialog").on("shown.bs.modal", (event) => {
+			//Post animation
+			document.querySelector("#inputTitle").focus();
+		});
+
+		rhit.fbJudyDutiesManager.beginListening(this.updateList.bind(this));
+	}
+	updateList() {
+		const newList = htmlToElement('<div id="judyDutiesListContainer"></div>');
+
+		for (let i = 0; i < rhit.fbJudyDutiesManager.length; i++) {
+			const d = rhit.fbJudyDutiesManager.getDutyAtIndex(i);
+			const newCard = this._createCard(d);
+			newCard.onclick = (event) => {
+				if (rhit.isHouseManager == true) {
+					window.location.href = `/duty.html?id=${d.id}&duties=judy`;
+				}
+			}
+			newList.appendChild(newCard);
+		}
+
+		const oldList = document.querySelector("#judyDutiesListContainer");
+		oldList.removeAttribute("id");
+		oldList.hidden = true;
+
+		oldList.parentElement.appendChild(newList);
+	}
+
+	_createCard(duty) {
+		return htmlToElement(`<div class="card">
+	    <div class="card-body">
+	      <h5 class="card-title">${duty.title}</h5>
+	      <h6 class="card-subtitle mb-2 text-muted">${duty.description}</h6>
+	    </div>
+	  </div>`)
+	}
+}
+
+rhit.DetailPageController = class {
+	constructor() {
+		document.querySelector("#menuSignOut").addEventListener("click", (event) => {
+			rhit.fbAuthManager.signOut();
+		});
+		document.querySelector("#submitEditDuty").addEventListener("click", (event) => {
+			const quote = document.querySelector("#inputTitle").value;
+			const movie = document.querySelector("#inputDescription").value;
+			rhit.fbSingleDutyManager.update(quote, movie);
+		});
+
+		$("#editDutyDialog").on("show.bs.modal", (event) => {
+			//Pre animation
+			document.querySelector("#inputTitle").value = rhit.fbSingleDutyManager.title;
+			document.querySelector("#inputDescription").value = rhit.fbSingleDutyManager.description;
+		});
+		$("#editDutyDialog").on("shown.bs.modal", (event) => {
+			//Post animation
+			document.querySelector("#inputTitle").focus();
+		});
+
+		document.querySelector("#submitDeleteDuty").addEventListener("click", (event) => {
+			rhit.fbSingleDutyManager.delete().then(function () {
+				console.log("Document successfully deleted!");
+				window.location.href = history.back().back();
+			}).catch(function (error) {
+				console.error("Error removing document: ", error);
+			});
+		});
+		rhit.fbSingleDutyManager.beginListening(this.updateView.bind(this));
+	}
+
+	updateView() {
+		document.querySelector("#cardTitle").innerHTML = rhit.fbSingleDutyManager.title;
+		document.querySelector("#cardDescription").innerHTML = rhit.fbSingleDutyManager.description;
+	}
 }
 
 rhit.initializePage = function () {
 	const urlParams = new URLSearchParams(window.location.search);
+	rhit.isHouseManager = !!urlParams.get("isHouseManager");
 	if (document.querySelector("#loginPage")) {
 		new rhit.LoginPageController();
 	}
@@ -171,8 +578,33 @@ rhit.initializePage = function () {
 	if (document.querySelector("#performersPage")) {
 		new rhit.PerformersPageController();
 	}
-	if (document.querySelector("#hallwaysPage")) {
+	if (document.querySelector("#managerPage")) {
+		new rhit.ManagerPageController();
+	}
+	if (document.querySelector("#hallwaysPage") || document.querySelector("#hallwaysManagePage")) {
+		rhit.fbHallwayDutiesManager = new rhit.FbDutiesManager("hallways");
 		new rhit.HallwaysPageController();
+	}
+	if (document.querySelector("#judyPage") || document.querySelector("#judyManagePage")) {
+		rhit.fbJudyDutiesManager = new rhit.FbDutiesManager("judy");
+		new rhit.JudyPageController();
+	}
+	if (document.querySelector("#libraryPage") || document.querySelector("#libraryManagePage")) {
+		rhit.fbLibraryDutiesManager = new rhit.FbDutiesManager("library");
+		new rhit.LibraryPageController();
+	}
+	if (document.querySelector("#dishCrewPage") || document.querySelector("#dishCrewManagePage")) {
+		rhit.fbDishCrewDutiesManager = new rhit.FbDutiesManager("dishCrew");
+		new rhit.DishCrewPageController();
+	}
+	if (document.querySelector("#detailPage")) {
+		const dutyId = urlParams.get("id");
+		const location = urlParams.get("duties");
+		if (!dutyId) {
+			window.location.href = "/";
+		}
+		rhit.fbSingleDutyManager = new rhit.FbSingleDutyManager(dutyId, location);
+		new rhit.DetailPageController();
 	}
 }
 

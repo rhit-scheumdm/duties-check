@@ -17,6 +17,11 @@ body {
     max-width: 150px;
 }
 
+#atoLogoDetail {
+    max-width: 150px;
+    left: -500px;
+}
+
 #roseLogo {
     max-width: 350px;
     margin: 20px auto;
@@ -36,7 +41,10 @@ body {
 #startPage > .btn,
 #performersPage > .btn,
 #managerPage > .btn,
-#hallwaysPage > .btn {
+#hallwaysPage > .btn,
+#judyPage > .btn,
+#dishCrewPage > .btn,
+#libraryPage > .btn {
     display: block;
     margin: 20px auto;
     padding: 10px 30px;
@@ -49,4 +57,46 @@ body {
 
 .card {
     margin: 10px 0;
+}
+
+#fab {
+    background: #CFB53B;
+    bottom: 10px;
+    color: white;
+    position: fixed;
+    right: 10px;
+    z-index: 999;
+}
+
+#fab:active {
+    opacity: 0.8;
+    transform: translateY(2px);
+}
+
+.card {
+    margin: 10px 0;
+}
+
+#startPage > .card-title,
+#performersPage > .card-title,
+#managerPage > .card-title,
+#hallwaysPage > .card-title,
+#judyPage > .card-title,
+#libraryPage > .card-title,
+#dishCrewPage > .card-title,
+#startPage > .card-subtitle,
+#performersPage > .card-subtitle,
+#managerPage > .card-subtitle,
+#hallwaysPage > .card-subtitle,
+#judyPage > .card-subtitle,
+#libraryPage > .card-subtitle,
+#dishCrewPage > .card-subtitle {
+    white-space: nowrap;
+    overflow: hidden;
+    display: block;
+    text-overflow: ellipsis;
+}
+
+.dropdown-menu-right {
+    left: -128px;
 }

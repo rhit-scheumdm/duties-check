@@ -18,7 +18,29 @@
   </nav>
   <div id="startPage" class="container page-container">
     <button id="dutiesPerformersButton" type="button" class="btn btn-outline-primary">Duties Performers Click Here</button>
-    <button id="houseManagerButton" type="button" class="btn btn-outline-primary">House Manager Click Here</button>
+    <button id="houseManagerButton" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#enterPass">House Manager Click Here</button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="enterPass" tabindex="-1" role="dialog" aria-labelledby="Add quote dialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Enter Password To Continue</h5>
+        </div>
+        <div class="modal-body">
+          <div class="form-group bmd-form-group">
+            <label for="inputPass" class="bmd-label-floating">Password</label>
+            <input type="text" class="form-control" id="inputPass">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
+          <button id="submitInputPass" type="button" class="btn btn-primary" data-dismiss="modal">SUBMIT</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="scripts/jquery.min.js"></script>
