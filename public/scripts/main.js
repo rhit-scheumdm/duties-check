@@ -313,21 +313,23 @@ rhit.HallwaysPageController = class {
 			rhit.fbAuthManager.signOut();
 		});
 
-		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
-			const title = document.querySelector("#inputTitle").value;
-			const description = document.querySelector("#inputDescription").value;
-			rhit.fbHallwayDutiesManager.add(title, description);
-		});
+		if (rhit.isHouseManager) {
+			document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+				const title = document.querySelector("#inputTitle").value;
+				const description = document.querySelector("#inputDescription").value;
+				rhit.fbHallwayDutiesManager.add(title, description);
+			});
 
-		$("#addDutyDialog").on("show.bs.modal", (event) => {
-			//Pre animation
-			document.querySelector("#inputTitle").value = "";
-			document.querySelector("#inputDescription").value = "";
-		});
-		$("#addDutyDialog").on("shown.bs.modal", (event) => {
-			//Post animation
-			document.querySelector("#inputTitle").focus();
-		});
+			$("#addDutyDialog").on("show.bs.modal", (event) => {
+				//Pre animation
+				document.querySelector("#inputTitle").value = "";
+				document.querySelector("#inputDescription").value = "";
+			});
+			$("#addDutyDialog").on("shown.bs.modal", (event) => {
+				//Post animation
+				document.querySelector("#inputTitle").focus();
+			});
+		}
 
 		rhit.fbHallwayDutiesManager.beginListening(this.updateList.bind(this));
 	}
@@ -369,21 +371,23 @@ rhit.DishCrewPageController = class {
 			rhit.fbAuthManager.signOut();
 		});
 
-		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
-			const title = document.querySelector("#inputTitle").value;
-			const description = document.querySelector("#inputDescription").value;
-			rhit.fbDishCrewDutiesManager.add(title, description);
-		});
+		if (rhit.isHouseManager) {
+			document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+				const title = document.querySelector("#inputTitle").value;
+				const description = document.querySelector("#inputDescription").value;
+				rhit.fbDishCrewDutiesManager.add(title, description);
+			});
 
-		$("#addDutyDialog").on("show.bs.modal", (event) => {
-			//Pre animation
-			document.querySelector("#inputTitle").value = "";
-			document.querySelector("#inputDescription").value = "";
-		});
-		$("#addDutyDialog").on("shown.bs.modal", (event) => {
-			//Post animation
-			document.querySelector("#inputTitle").focus();
-		});
+			$("#addDutyDialog").on("show.bs.modal", (event) => {
+				//Pre animation
+				document.querySelector("#inputTitle").value = "";
+				document.querySelector("#inputDescription").value = "";
+			});
+			$("#addDutyDialog").on("shown.bs.modal", (event) => {
+				//Post animation
+				document.querySelector("#inputTitle").focus();
+			});
+		}
 
 		rhit.fbDishCrewDutiesManager.beginListening(this.updateList.bind(this));
 	}
@@ -424,21 +428,23 @@ rhit.LibraryPageController = class {
 			rhit.fbAuthManager.signOut();
 		});
 
-		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
-			const title = document.querySelector("#inputTitle").value;
-			const description = document.querySelector("#inputDescription").value;
-			rhit.fbLibraryDutiesManager.add(title, description);
-		});
+		if (rhit.isHouseManager) {
+			document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+				const title = document.querySelector("#inputTitle").value;
+				const description = document.querySelector("#inputDescription").value;
+				rhit.fbLibraryDutiesManager.add(title, description);
+			});
 
-		$("#addDutyDialog").on("show.bs.modal", (event) => {
-			//Pre animation
-			document.querySelector("#inputTitle").value = "";
-			document.querySelector("#inputDescription").value = "";
-		});
-		$("#addDutyDialog").on("shown.bs.modal", (event) => {
-			//Post animation
-			document.querySelector("#inputTitle").focus();
-		});
+			$("#addDutyDialog").on("show.bs.modal", (event) => {
+				//Pre animation
+				document.querySelector("#inputTitle").value = "";
+				document.querySelector("#inputDescription").value = "";
+			});
+			$("#addDutyDialog").on("shown.bs.modal", (event) => {
+				//Post animation
+				document.querySelector("#inputTitle").focus();
+			});
+		}
 
 		rhit.fbLibraryDutiesManager.beginListening(this.updateList.bind(this));
 	}
@@ -479,21 +485,23 @@ rhit.JudyPageController = class {
 			rhit.fbAuthManager.signOut();
 		});
 
-		document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
-			const title = document.querySelector("#inputTitle").value;
-			const description = document.querySelector("#inputDescription").value;
-			rhit.fbJudyDutiesManager.add(title, description);
-		});
+		if (rhit.isHouseManager) {
+			document.querySelector("#submitAddDuty").addEventListener("click", (event) => {
+				const title = document.querySelector("#inputTitle").value;
+				const description = document.querySelector("#inputDescription").value;
+				rhit.fbJudyDutiesManager.add(title, description);
+			});
 
-		$("#addDutyDialog").on("show.bs.modal", (event) => {
-			//Pre animation
-			document.querySelector("#inputTitle").value = "";
-			document.querySelector("#inputDescription").value = "";
-		});
-		$("#addDutyDialog").on("shown.bs.modal", (event) => {
-			//Post animation
-			document.querySelector("#inputTitle").focus();
-		});
+			$("#addDutyDialog").on("show.bs.modal", (event) => {
+				//Pre animation
+				document.querySelector("#inputTitle").value = "";
+				document.querySelector("#inputDescription").value = "";
+			});
+			$("#addDutyDialog").on("shown.bs.modal", (event) => {
+				//Post animation
+				document.querySelector("#inputTitle").focus();
+			});
+		}
 
 		rhit.fbJudyDutiesManager.beginListening(this.updateList.bind(this));
 	}
@@ -568,7 +576,12 @@ rhit.DetailPageController = class {
 
 rhit.initializePage = function () {
 	const urlParams = new URLSearchParams(window.location.search);
-	rhit.isHouseManager = !!urlParams.get("isHouseManager");
+	const isHouseManager = urlParams.get("isHouseManager");
+	if(isHouseManager == "true"){
+		rhit.isHouseManager = true;
+	} else {
+		rhit.isHouseManager = false;
+	}
 	if (document.querySelector("#loginPage")) {
 		new rhit.LoginPageController();
 	}
