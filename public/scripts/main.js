@@ -3,7 +3,7 @@
  * Provides the JavaScript interactions for all pages.
  *
  * @author 
- * Dylan Scheumann and Jack Speedy
+ * Dylan Scheumann
  */
 
 /** namespace. */
@@ -172,7 +172,7 @@ rhit.FbAuthManager = class {
 		});
 	}
 	signIn() {
-		Rosefire.signIn("ebd11048-b350-43b4-a442-adaf96f1f48d", (err, rfUser) => {
+		Rosefire.signIn("ea0c7e94-a589-4cbe-a2aa-aab12689aa3f", (err, rfUser) => {
 			if (err) {
 				console.log("Rosefire error!", err);
 				return;
